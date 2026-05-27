@@ -334,26 +334,34 @@ mindmap
       });
     }
 
-    async function renderAll() {
-      await mermaid.run({ querySelector: '.mermaid' });
+    // Track which diagrams have already been rendered (Mermaid fails silently on hidden elements)
+    const rendered = new Set();
+
+    async function renderDiagram(el) {
+      if (rendered.has(el.id)) return;
+      rendered.add(el.id);
+      await mermaid.run({ nodes: [el] });
       rewriteLessonLinks();
     }
 
-    renderAll();
+    // Render only the initially-visible diagram on load
+    renderDiagram(document.getElementById('diagram-navigation'));
 
     // ─────────────────────────────────────────────────────────────────────────
-    // Tab switching
+    // Tab switching — render each diagram lazily on first reveal
     // ─────────────────────────────────────────────────────────────────────────
     const tabs = document.querySelectorAll('.tab');
     const views = document.querySelectorAll('.view');
     tabs.forEach(tab => {
-      tab.addEventListener('click', () => {
+      tab.addEventListener('click', async () => {
         tabs.forEach(t => t.classList.remove('active'));
         views.forEach(v => v.classList.remove('active'));
         tab.classList.add('active');
-        document.getElementById('view-' + tab.dataset.view).classList.add('active');
-        // Re-rewrite in case the diagram just became visible and was lazily rendered
-        rewriteLessonLinks();
+        const view = document.getElementById('view-' + tab.dataset.view);
+        view.classList.add('active');
+        // Render the diagram in this tab now that it's visible
+        const diagramEl = view.querySelector('.mermaid');
+        if (diagramEl) await renderDiagram(diagramEl);
       });
     });
   </script>
