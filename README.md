@@ -81,6 +81,23 @@ intern-training/
 
 > **Tip:** open [`course-map.html`](./course-map.html) in a browser for an interactive mindmap where every day-node links straight to its detailed lesson.
 
+### Hosting on GitHub Pages
+
+The interactive `course-map.html` is designed to work on GitHub Pages. Once Pages is enabled, the file is reachable at:
+
+**https://vietquochoang.github.io/be-fast-api-training/course-map.html**
+
+The diagram's click targets are automatically rewritten to `github.com/VietQuocHoang/be-fast-api-training/blob/main/...` URLs when served over http(s), so each lesson opens as a rendered markdown page on github.com. Opening the file locally (`file://`) keeps clicks as relative `./days/...` paths.
+
+**To enable Pages** (one-time, in the GitHub UI):
+
+1. Repo → **Settings** → **Pages**.
+2. Under **Source**, choose **Deploy from a branch**.
+3. Pick branch `main` and folder `/ (root)`. Save.
+4. Wait ~30 seconds. The URL above will go live.
+
+To point to a different repo, edit the `REPO_BLOB_URL` constant at the top of the `<script>` block in `course-map.html`.
+
 ## Daily index
 
 | Week | Day | Topic |

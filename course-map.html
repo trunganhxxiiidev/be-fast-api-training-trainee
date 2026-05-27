@@ -294,8 +294,20 @@ mindmap
   <script type="module">
     import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
 
+    // ─────────────────────────────────────────────────────────────────────────
+    // Configuration
+    // ─────────────────────────────────────────────────────────────────────────
+    // When this HTML is served over http(s) (e.g. GitHub Pages) the diagram's
+    // relative `./days/*.md` click targets would serve as raw plaintext.
+    // We rewrite them to github.com blob URLs which render as nice HTML.
+    // Open the file directly (file://) to keep clicks as relative links.
+    const REPO_BLOB_URL = 'https://github.com/VietQuocHoang/be-fast-api-training/blob/main/';
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // Mermaid setup (manual run so we can rewrite hrefs after render)
+    // ─────────────────────────────────────────────────────────────────────────
     mermaid.initialize({
-      startOnLoad: true,
+      startOnLoad: false,
       theme: 'default',
       securityLevel: 'loose',
       flowchart: {
@@ -304,11 +316,34 @@ mindmap
         nodeSpacing: 40,
         rankSpacing: 60
       },
-      mindmap: {
-        padding: 16
-      }
+      mindmap: { padding: 16 }
     });
 
+    function rewriteLessonLinks(root = document) {
+      if (window.location.protocol === 'file:') return; // local — leave relative paths
+      const nodes = root.querySelectorAll('a[href$=".md"], a[*|href$=".md"]');
+      nodes.forEach(a => {
+        const href = a.getAttribute('href') || a.getAttribute('xlink:href');
+        if (!href || /^https?:\/\//i.test(href)) return;
+        const cleaned = href.replace(/^\.\//, '');
+        const newHref = REPO_BLOB_URL + cleaned;
+        a.setAttribute('href', newHref);
+        if (a.hasAttribute('xlink:href')) a.setAttribute('xlink:href', newHref);
+        a.setAttribute('target', '_blank');
+        a.setAttribute('rel', 'noopener noreferrer');
+      });
+    }
+
+    async function renderAll() {
+      await mermaid.run({ querySelector: '.mermaid' });
+      rewriteLessonLinks();
+    }
+
+    renderAll();
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // Tab switching
+    // ─────────────────────────────────────────────────────────────────────────
     const tabs = document.querySelectorAll('.tab');
     const views = document.querySelectorAll('.view');
     tabs.forEach(tab => {
@@ -317,6 +352,8 @@ mindmap
         views.forEach(v => v.classList.remove('active'));
         tab.classList.add('active');
         document.getElementById('view-' + tab.dataset.view).classList.add('active');
+        // Re-rewrite in case the diagram just became visible and was lazily rendered
+        rewriteLessonLinks();
       });
     });
   </script>
