@@ -64,17 +64,47 @@ intern-training/
 ├── README.md                  ← this file
 ├── course-mindmap.md          ← mermaid mindmap + clickable nav graph
 ├── course-map.html            ← interactive mindmap (open in browser)
-├── week-1-fundamentals.md
+├── week-1-fundamentals.md     ← week-at-a-glance pages
 ├── week-2-backend-core.md
 ├── week-3-advanced.md
 ├── week-4-pet-project.md
+├── days/                      ← detailed daily lesson files
+│   ├── day-01-environment-git.md
+│   ├── day-02-python-refresher.md
+│   ├── ...
+│   └── day-20-pet-demo.md
 ├── pet-project-spec.md        ← final examination spec
 ├── resources.md               ← curated reading/video list
 ├── evaluation-rubric.md       ← how the mentor scores the program
 └── journal/                   ← intern's daily log entries (created day 1)
 ```
 
-> **Tip:** open [`course-map.html`](./course-map.html) in a browser for an interactive mindmap where every day-node links to its docs.
+> **Tip:** open [`course-map.html`](./course-map.html) in a browser for an interactive mindmap where every day-node links straight to its detailed lesson.
+
+## Daily index
+
+| Week | Day | Topic |
+|------|-----|-------|
+| 1 | [Day 1](./days/day-01-environment-git.md) | Environment, Shell & Git |
+| 1 | [Day 2](./days/day-02-python-refresher.md) | Python Refresher |
+| 1 | [Day 3](./days/day-03-http-rest.md) | HTTP & REST |
+| 1 | [Day 4](./days/day-04-async-fastapi.md) | Async Python & FastAPI Fundamentals |
+| 1 | [Day 5](./days/day-05-hello-api.md) | Hello API *(deliverable)* |
+| 2 | [Day 6](./days/day-06-fastapi-deep-dive.md) | FastAPI Deep Dive |
+| 2 | [Day 7](./days/day-07-postgresql.md) | PostgreSQL Fundamentals |
+| 2 | [Day 8](./days/day-08-sqlalchemy.md) | SQLAlchemy 2.0 |
+| 2 | [Day 9](./days/day-09-alembic.md) | Alembic Migrations |
+| 2 | [Day 10](./days/day-10-auth.md) | Authentication & Authorization *(deliverable)* |
+| 3 | [Day 11](./days/day-11-testing.md) | Automated Testing |
+| 3 | [Day 12](./days/day-12-logging.md) | Logging, Errors & Observability |
+| 3 | [Day 13](./days/day-13-docker.md) | Docker & docker compose |
+| 3 | [Day 14](./days/day-14-caching.md) | Caching & Async Work |
+| 3 | [Day 15](./days/day-15-terraform-ec2.md) | Terraform + AWS EC2 *(deliverable)* |
+| 4 | [Day 16](./days/day-16-pet-design.md) | Pet Project: Design |
+| 4 | [Day 17](./days/day-17-pet-scaffold.md) | Pet Project: Scaffold & Database |
+| 4 | [Day 18](./days/day-18-pet-crud-auth.md) | Pet Project: CRUD + Auth |
+| 4 | [Day 19](./days/day-19-pet-polish.md) | Pet Project: Polish |
+| 4 | [Day 20](./days/day-20-pet-demo.md) | Pet Project: Deploy & Demo *(final)* |
 
 ---
 

@@ -2,6 +2,15 @@
 
 **Goal:** Move from "it works on my laptop" to "it's testable, observable, and deployable." Everything this week is about making code survive contact with reality.
 
+> **Detailed daily lessons** with required reading, exercises, pitfalls, and self-check:
+> - [Day 11 — Automated Testing](./days/day-11-testing.md)
+> - [Day 12 — Logging, Errors & Observability](./days/day-12-logging.md)
+> - [Day 13 — Docker & docker compose](./days/day-13-docker.md)
+> - [Day 14 — Caching & Async Work](./days/day-14-caching.md)
+> - [Day 15 — Deploying with Terraform + AWS EC2 (deliverable)](./days/day-15-terraform-ec2.md)
+
+This page is the **week-at-a-glance**. Click into each day for the full lesson.
+
 ---
 
 ## Day 11 — Automated Testing

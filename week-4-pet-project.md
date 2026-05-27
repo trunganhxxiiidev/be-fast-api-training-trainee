@@ -4,6 +4,15 @@
 
 Full spec lives in [`pet-project-spec.md`](./pet-project-spec.md).
 
+> **Detailed daily lessons**:
+> - [Day 16 — Design](./days/day-16-pet-design.md)
+> - [Day 17 — Scaffold & Database](./days/day-17-pet-scaffold.md)
+> - [Day 18 — Core CRUD + Auth](./days/day-18-pet-crud-auth.md)
+> - [Day 19 — Secondary Features + Polish](./days/day-19-pet-polish.md)
+> - [Day 20 — Deploy & Demo (final examination)](./days/day-20-pet-demo.md)
+
+This page is the **week-at-a-glance**. Click into each day for the full lesson.
+
 ---
 
 ## Day-by-day plan (suggested — adjust as needed)

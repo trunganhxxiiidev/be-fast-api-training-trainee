@@ -4,6 +4,15 @@
 
 By Friday, the intern should be able to: clone a repo, branch and PR cleanly, write a small FastAPI service with tests, and explain what happens between `curl` and the route handler.
 
+> **Detailed daily lessons** with required reading, exercises, pitfalls, and self-check:
+> - [Day 1 — Environment, Shell & Git](./days/day-01-environment-git.md)
+> - [Day 2 — Python Refresher](./days/day-02-python-refresher.md)
+> - [Day 3 — HTTP & REST](./days/day-03-http-rest.md)
+> - [Day 4 — Async Python & FastAPI Fundamentals](./days/day-04-async-fastapi.md)
+> - [Day 5 — Hello API (deliverable)](./days/day-05-hello-api.md)
+
+This page is the **week-at-a-glance**. Click into each day for the full lesson.
+
 ---
 
 ## Day 1 — Environment, Shell & Git

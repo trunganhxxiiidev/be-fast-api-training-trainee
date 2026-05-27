@@ -4,6 +4,15 @@
 
 Stack lock-in: **FastAPI** for the web layer, **SQLAlchemy 2.0** for the ORM, **PostgreSQL** for storage, **Alembic** for migrations.
 
+> **Detailed daily lessons** with required reading, exercises, pitfalls, and self-check:
+> - [Day 6 — FastAPI Deep Dive](./days/day-06-fastapi-deep-dive.md)
+> - [Day 7 — PostgreSQL Fundamentals](./days/day-07-postgresql.md)
+> - [Day 8 — SQLAlchemy 2.0](./days/day-08-sqlalchemy.md)
+> - [Day 9 — Alembic Migrations](./days/day-09-alembic.md)
+> - [Day 10 — Authentication & Authorization (deliverable)](./days/day-10-auth.md)
+
+This page is the **week-at-a-glance**. Click into each day for the full lesson.
+
 ---
 
 ## Day 6 — FastAPI Deep Dive
