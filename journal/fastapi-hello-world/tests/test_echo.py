@@ -17,6 +17,6 @@ def test_echo_rejects_missing_message(client: TestClient) -> None:
 
     assert response.status_code == 422
     body = response.json()
-    assert "detail" in body
-    assert body["detail"][0]["loc"] == ["body", "message"]
-
+    assert body["error"]["code"] == "VALIDATION_ERROR"
+    assert body["error"]["message"] == "Invalid request"
+    assert body["error"]["details"][0]["loc"] == ["body", "message"]

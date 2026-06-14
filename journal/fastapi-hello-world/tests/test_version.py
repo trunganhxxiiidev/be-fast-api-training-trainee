@@ -12,5 +12,4 @@ def test_version_rejects_post(client: TestClient) -> None:
     response = client.post("/version")
 
     assert response.status_code == 405
-    assert "detail" in response.json()
-
+    assert response.json()["error"]["code"] == "METHOD_NOT_ALLOWED"
