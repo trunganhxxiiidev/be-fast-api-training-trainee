@@ -1,14 +1,20 @@
 # Hello API
 
-Day 5 bien project FastAPI hello world thanh mot service nho nhung co cau truc gan voi cach lam that: tach route, tach schema, config doc tu bien moi truong, middleware log request, va test bang HTTP client.
+Day 5 biến project FastAPI hello world thành một service nhỏ có cấu trúc gần với dự án thật. Day 6 tiếp tục refactor project này theo hướng backend core: tách `schemas/`, thêm `services/`, dùng `Depends()` cho pagination, thêm CRUD `/users`, và chuẩn hóa error response.
 
-Service nay co 3 endpoint:
+Service này có các endpoint chính:
 
 | Method | Path | Ket qua |
 | --- | --- | --- |
 | `GET` | `/health` | Tra ve `{"status": "ok"}` |
 | `POST` | `/echo` | Nhan `{"message": str}` va tra ve message kem timestamp |
 | `GET` | `/version` | Tra ve version doc tu config |
+| `POST` | `/users` | Tạo user in-memory |
+| `GET` | `/users?limit=20&offset=0` | List user có pagination |
+| `GET` | `/users/{user_id}` | Lấy một user |
+| `PUT` | `/users/{user_id}` | Replace user |
+| `PATCH` | `/users/{user_id}` | Update một phần user |
+| `DELETE` | `/users/{user_id}` | Xóa user, trả `204` |
 
 ## Muc Tieu Bai Hoc
 
@@ -20,6 +26,10 @@ Sau bai nay ban can nam duoc:
 - Cach doc config tu env var bang `pydantic-settings`.
 - Cach viet middleware do thoi gian request va log ra stdout.
 - Cach viet test cho endpoint thanh cong va request sai body.
+- Cách dùng `APIRouter` để nhóm endpoint theo tag.
+- Cách dùng `Depends()` cho query params dùng lại được.
+- Cách giữ route mỏng và đưa business logic vào `services/`.
+- Cách dùng global exception handlers để error có shape thống nhất.
 
 ## Cau Truc Project
 
@@ -29,19 +39,34 @@ fastapi-hello-world/
 │   ├── __init__.py
 │   ├── main.py
 │   ├── config.py
+│   ├── deps.py
+│   ├── error_handlers.py
+│   ├── exceptions.py
 │   ├── logging_setup.py
 │   ├── middleware.py
-│   ├── schemas.py
+│   ├── schemas/
+│   │   ├── __init__.py
+│   │   ├── echo.py
+│   │   ├── error.py
+│   │   ├── health.py
+│   │   ├── user.py
+│   │   └── version.py
+│   ├── services/
+│   │   ├── __init__.py
+│   │   ├── echo_service.py
+│   │   └── user_service.py
 │   └── routes/
 │       ├── __init__.py
 │       ├── health.py
 │       ├── echo.py
+│       ├── users.py
 │       └── version.py
 ├── tests/
 │   ├── __init__.py
 │   ├── conftest.py
 │   ├── test_health.py
 │   ├── test_echo.py
+│   ├── test_users.py
 │   └── test_version.py
 ├── main.py
 ├── pyproject.toml
@@ -56,9 +81,13 @@ Y nghia nhanh:
 
 - `app/main.py`: tao app, gan middleware, include router.
 - `app/config.py`: noi doc `PORT`, `APP_VERSION`, `LOG_LEVEL`.
+- `app/deps.py`: dependency dùng chung, hiện có `pagination`.
+- `app/error_handlers.py`: đăng ký global error envelope.
+- `app/exceptions.py`: domain exceptions như duplicate email, user not found.
 - `app/logging_setup.py`: cau hinh log JSON ra stdout.
 - `app/middleware.py`: do moi request mat bao lau va log mot dong.
-- `app/schemas.py`: dinh nghia shape request/response.
+- `app/schemas/`: định nghĩa shape request/response bằng Pydantic.
+- `app/services/`: chứa business logic, không import FastAPI.
 - `app/routes/`: moi file la mot nhom endpoint rieng.
 - `tests/`: test endpoint bang `TestClient`.
 - `main.py`: shim de command cu `main:app` van import duoc.
@@ -94,7 +123,7 @@ Mo browser:
 http://127.0.0.1:8000/docs
 ```
 
-Swagger UI o `/docs` se hien 3 endpoint va schema `EchoRequest`, `EchoResponse`, `HealthResponse`, `VersionResponse`.
+Swagger UI o `/docs` sẽ hiện endpoint theo tag: `health`, `echo`, `version`, `users`.
 
 ## Goi Thu API
 
@@ -138,6 +167,44 @@ Ket qua:
 
 ```json
 {"version":"2.0.0"}
+```
+
+Users:
+
+```bash
+curl -X POST http://127.0.0.1:8000/users \
+  -H "Content-Type: application/json" \
+  -d '{"email":"ada@example.com","name":"Ada Lovelace","password":"correct-horse-battery","is_active":true}'
+```
+
+Kết quả:
+
+```json
+{
+  "id": 1,
+  "email": "ada@example.com",
+  "name": "Ada Lovelace",
+  "is_active": true,
+  "created_at": "2026-06-14T10:00:00.000000Z",
+  "updated_at": null
+}
+```
+
+List user có pagination:
+
+```bash
+curl 'http://127.0.0.1:8000/users?limit=20&offset=0'
+```
+
+Nếu lỗi, API trả envelope thống nhất:
+
+```json
+{
+  "error": {
+    "code": "USER_NOT_FOUND",
+    "message": "User not found"
+  }
+}
 ```
 
 ## Env Vars
@@ -209,9 +276,11 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app = FastAPI(...)
     app.state.settings = app_settings
     app.add_middleware(RequestLoggerMiddleware)
+    register_exception_handlers(app)
     app.include_router(health.router)
     app.include_router(echo.router)
     app.include_router(version.router)
+    app.include_router(users.router)
     return app
 ```
 
@@ -221,7 +290,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
 - Co the truyen settings rieng khi test.
 - Setup app nam mot cho, de them middleware/router sau nay.
 
-### `app/schemas.py`
+### `app/schemas/`
 
 Schema tach khoi route de code doc de hon:
 
@@ -229,18 +298,19 @@ Schema tach khoi route de code doc de hon:
 - `EchoResponse`: body server tra ve.
 - `HealthResponse`: response cua `/health`.
 - `VersionResponse`: response cua `/version`.
+- `UserCreate`: body tạo user, không có `id`.
+- `UserUpdate`: body patch user, field optional.
+- `UserOut`: response user, có `id`, không trả `password`.
+- `ErrorEnvelope`: shape lỗi thống nhất.
 
-Khi body `/echo` thieu `message`, FastAPI va Pydantic tu dong tra ve HTTP `422` voi envelope mac dinh co key `detail`.
+Khi body `/echo` thieu `message`, FastAPI và Pydantic trả HTTP `422`, sau đó global handler đổi response thành `{"error": ...}`.
 
 ### `app/routes/echo.py`
 
 ```python
 @router.post("/echo", response_model=EchoResponse)
 def echo(payload: EchoRequest) -> EchoResponse:
-    return EchoResponse(
-        echo=payload.message,
-        received_at=datetime.now(UTC).isoformat(),
-    )
+    return build_echo_response(payload.message)
 ```
 
 FastAPI lam cac buoc:
@@ -251,12 +321,53 @@ FastAPI lam cac buoc:
 4. Validate response theo `EchoResponse`.
 5. Convert response thanh JSON.
 
+### `app/routes/users.py` và `app/services/user_service.py`
+
+`routes/users.py` chỉ nhận request, validate bằng schema, gọi service, rồi trả `UserOut`.
+
+`services/user_service.py` giữ in-memory `dict[int, UserRecord]` và xử lý:
+
+- tạo id tự tăng;
+- reject duplicate email bằng `DuplicateEmailError`;
+- trả `UserNotFoundError` khi không thấy user;
+- list theo `limit` và `offset`;
+- replace, patch, delete user.
+
+### `app/deps.py`
+
+```python
+def pagination(limit: int = Query(20, ge=1, le=100), offset: int = Query(0, ge=0)):
+    return limit, offset
+```
+
+Dependency này được dùng trong `GET /users`, giúp route không phải tự parse query params.
+
+### `app/error_handlers.py`
+
+File này đổi lỗi mặc định của FastAPI từ:
+
+```json
+{"detail": "..."}
+```
+
+thành:
+
+```json
+{"error": {"code": "...", "message": "..."}}
+```
+
 ## Test
 
 Chay test:
 
 ```bash
 uv run pytest -v
+```
+
+Chạy lint:
+
+```bash
+uv run ruff check .
 ```
 
 Project hien co 6 test:

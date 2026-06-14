@@ -1,16 +1,11 @@
-from datetime import UTC, datetime
-
 from fastapi import APIRouter
 
 from app.schemas import EchoRequest, EchoResponse
+from app.services import build_echo_response
 
 router = APIRouter(tags=["echo"])
 
 
 @router.post("/echo", response_model=EchoResponse)
 def echo(payload: EchoRequest) -> EchoResponse:
-    return EchoResponse(
-        echo=payload.message,
-        received_at=datetime.now(UTC).isoformat(),
-    )
-
+    return build_echo_response(payload.message)
