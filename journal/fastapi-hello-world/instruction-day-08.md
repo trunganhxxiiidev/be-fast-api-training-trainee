@@ -186,14 +186,14 @@ Như vậy list relationship không bị query từng row.
 - Chuyển `/users` CRUD sang database.
 - Thêm `/posts` CRUD.
 - Thêm `GET /users/{user_id}/posts` dùng relationship path.
-- Thêm `scripts/create_tables.py` để tạo table tạm trước Day 9 Alembic.
+- Day 8 ban đầu dùng script tạo table tạm; sang Day 9 script này được thay bằng Alembic migrations.
 - Thêm tests dùng SQLite async in-memory.
 
 ## 9. Verification
 
 ```bash
 cd journal/fastapi-hello-world
-DATABASE_URL=sqlite+aiosqlite:////tmp/day08_verify.db DATABASE_ECHO=false uv run python scripts/create_tables.py
+DATABASE_URL=sqlite+aiosqlite:////tmp/day08_verify.db DATABASE_ECHO=false uv run alembic upgrade head
 uv run pytest
 uv run ruff check .
 ```

@@ -1,4 +1,5 @@
 from fastapi.testclient import TestClient
+from datetime import datetime
 
 from tests.test_users import user_payload
 
@@ -10,6 +11,7 @@ def post_payload(
     return {
         "user_id": user_id,
         "title": title,
+        "summary": "Short SQLAlchemy note.",
         "body": "A post belongs to one user.",
         "published": True,
     }
@@ -25,6 +27,8 @@ def test_create_then_get_post(client: TestClient) -> None:
     assert created["id"] == 1
     assert created["user_id"] == 1
     assert created["title"] == "SQLAlchemy relationships"
+    assert created["summary"] == "Short SQLAlchemy note."
+    assert datetime.fromisoformat(created["published_at"])
 
     get_response = client.get("/posts/1")
 

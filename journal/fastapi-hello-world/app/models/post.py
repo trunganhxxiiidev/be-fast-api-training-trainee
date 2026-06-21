@@ -22,8 +22,13 @@ class Post(Base):
         index=True,
     )
     title: Mapped[str] = mapped_column(String(200))
+    summary: Mapped[str | None] = mapped_column(String(280))
     body: Mapped[str] = mapped_column(Text)
     published: Mapped[bool] = mapped_column(default=False)
+    published_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        server_default=func.now(),
+    )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=func.now(),

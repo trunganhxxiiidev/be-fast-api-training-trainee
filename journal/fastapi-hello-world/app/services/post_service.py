@@ -32,6 +32,7 @@ async def create_post(db: AsyncSession, payload: PostCreate) -> Post:
     post = Post(
         user_id=payload.user_id,
         title=payload.title,
+        summary=payload.summary,
         body=payload.body,
         published=payload.published,
     )
@@ -50,6 +51,7 @@ async def replace_post(
 
     post.user_id = payload.user_id
     post.title = payload.title
+    post.summary = payload.summary
     post.body = payload.body
     post.published = payload.published
     post.updated_at = datetime.now(UTC)
@@ -66,6 +68,8 @@ async def update_post(db: AsyncSession, post_id: int, payload: PostUpdate) -> Po
         post.user_id = updates["user_id"]
     if "title" in updates:
         post.title = updates["title"]
+    if "summary" in updates:
+        post.summary = updates["summary"]
     if "body" in updates:
         post.body = updates["body"]
     if "published" in updates:

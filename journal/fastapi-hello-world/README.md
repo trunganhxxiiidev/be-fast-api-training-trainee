@@ -82,8 +82,9 @@ fastapi-hello-world/
 │       ├── posts.py
 │       ├── users.py
 │       └── version.py
-├── scripts/
-│   └── create_tables.py
+├── migrations/
+│   ├── env.py
+│   └── versions/
 ├── tests/
 │   ├── __init__.py
 │   ├── conftest.py
@@ -115,7 +116,7 @@ Y nghia nhanh:
 - `app/models/`: định nghĩa SQLAlchemy ORM models map với database tables.
 - `app/services/`: chứa business logic, không import FastAPI.
 - `app/routes/`: moi file la mot nhom endpoint rieng.
-- `scripts/create_tables.py`: tạo table tạm cho Day 8 trước khi học Alembic ở Day 9.
+- `migrations/`: Alembic migrations quản lý schema database theo version.
 - `tests/`: test endpoint bang `TestClient`.
 - `main.py`: shim de command cu `main:app` van import duoc.
 
@@ -139,10 +140,10 @@ DATABASE_URL=postgresql+asyncpg://postgres:dev@localhost:5432/day08_api
 DATABASE_ECHO=true
 ```
 
-Tạo table tạm trước khi học Alembic ở Day 9:
+Tạo hoặc cập nhật schema bằng Alembic:
 
 ```bash
-uv run python scripts/create_tables.py
+uv run alembic upgrade head
 ```
 
 Chay theo dung layout moi:
