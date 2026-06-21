@@ -5,7 +5,7 @@ from app.config import Settings, get_settings
 from app.error_handlers import register_exception_handlers
 from app.logging_setup import setup_logging
 from app.middleware import RequestLoggerMiddleware
-from app.routes import echo, health, users, version
+from app.routes import echo, health, posts, users, version
 
 
 def create_app(settings: Settings | None = None) -> FastAPI:
@@ -25,6 +25,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(echo.router)
     app.include_router(version.router)
     app.include_router(users.router)
+    app.include_router(posts.router)
 
     return app
 

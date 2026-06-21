@@ -5,8 +5,11 @@ description = "Structured FastAPI hello API project"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
+    "aiosqlite>=0.22.1",
+    "asyncpg>=0.31.0",
     "fastapi[standard]>=0.115.0",
     "pydantic-settings>=2.0.0",
+    "sqlalchemy[asyncio]>=2.0.0",
 ]
 
 [dependency-groups]

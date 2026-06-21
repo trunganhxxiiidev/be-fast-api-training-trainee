@@ -1,6 +1,6 @@
 # Hello API
 
-Day 5 biến project FastAPI hello world thành một service nhỏ có cấu trúc gần với dự án thật. Day 6 tiếp tục refactor project này theo hướng backend core: tách `schemas/`, thêm `services/`, dùng `Depends()` cho pagination, thêm CRUD `/users`, và chuẩn hóa error response.
+Day 5 biến project FastAPI hello world thành một service nhỏ có cấu trúc gần với dự án thật. Day 6 tiếp tục refactor project này theo hướng backend core: tách `schemas/`, thêm `services/`, dùng `Depends()` cho pagination, thêm CRUD `/users`, và chuẩn hóa error response. Day 8 chuyển `/users` sang SQLAlchemy ORM async, thêm models quan hệ `User`/`Post`/`Comment`, và thêm CRUD `/posts`.
 
 Service này có các endpoint chính:
 
@@ -9,12 +9,19 @@ Service này có các endpoint chính:
 | `GET` | `/health` | Tra ve `{"status": "ok"}` |
 | `POST` | `/echo` | Nhan `{"message": str}` va tra ve message kem timestamp |
 | `GET` | `/version` | Tra ve version doc tu config |
-| `POST` | `/users` | Tạo user in-memory |
+| `POST` | `/users` | Tạo user trong database |
 | `GET` | `/users?limit=20&offset=0` | List user có pagination |
 | `GET` | `/users/{user_id}` | Lấy một user |
+| `GET` | `/users/{user_id}/posts` | List posts của user bằng relationship |
 | `PUT` | `/users/{user_id}` | Replace user |
 | `PATCH` | `/users/{user_id}` | Update một phần user |
 | `DELETE` | `/users/{user_id}` | Xóa user, trả `204` |
+| `POST` | `/posts` | Tạo post thuộc về user |
+| `GET` | `/posts?limit=20&offset=0` | List posts có pagination |
+| `GET` | `/posts/{post_id}` | Lấy một post |
+| `PUT` | `/posts/{post_id}` | Replace post |
+| `PATCH` | `/posts/{post_id}` | Update một phần post |
+| `DELETE` | `/posts/{post_id}` | Xóa post, trả `204` |
 
 ## Muc Tieu Bai Hoc
 
@@ -30,6 +37,10 @@ Sau bai nay ban can nam duoc:
 - Cách dùng `Depends()` cho query params dùng lại được.
 - Cách giữ route mỏng và đưa business logic vào `services/`.
 - Cách dùng global exception handlers để error có shape thống nhất.
+- Cách dùng SQLAlchemy 2.0 typed ORM với `Mapped[...]` và `mapped_column(...)`.
+- Cách dùng `AsyncSession` làm FastAPI dependency.
+- Cách khai báo relationship giữa `User`, `Post`, `Comment`.
+- Cách tránh N+1 query bằng `selectinload`.
 
 ## Cau Truc Project
 
@@ -39,6 +50,7 @@ fastapi-hello-world/
 │   ├── __init__.py
 │   ├── main.py
 │   ├── config.py
+│   ├── db.py
 │   ├── deps.py
 │   ├── error_handlers.py
 │   ├── exceptions.py
@@ -49,23 +61,35 @@ fastapi-hello-world/
 │   │   ├── echo.py
 │   │   ├── error.py
 │   │   ├── health.py
+│   │   ├── post.py
 │   │   ├── user.py
 │   │   └── version.py
+│   ├── models/
+│   │   ├── __init__.py
+│   │   ├── base.py
+│   │   ├── user.py
+│   │   ├── post.py
+│   │   └── comment.py
 │   ├── services/
 │   │   ├── __init__.py
 │   │   ├── echo_service.py
+│   │   ├── post_service.py
 │   │   └── user_service.py
 │   └── routes/
 │       ├── __init__.py
 │       ├── health.py
 │       ├── echo.py
+│       ├── posts.py
 │       ├── users.py
 │       └── version.py
+├── scripts/
+│   └── create_tables.py
 ├── tests/
 │   ├── __init__.py
 │   ├── conftest.py
 │   ├── test_health.py
 │   ├── test_echo.py
+│   ├── test_posts.py
 │   ├── test_users.py
 │   └── test_version.py
 ├── main.py
@@ -80,15 +104,18 @@ fastapi-hello-world/
 Y nghia nhanh:
 
 - `app/main.py`: tao app, gan middleware, include router.
-- `app/config.py`: noi doc `PORT`, `APP_VERSION`, `LOG_LEVEL`.
+- `app/config.py`: noi doc `PORT`, `APP_VERSION`, `LOG_LEVEL`, `DATABASE_URL`, `DATABASE_ECHO`.
+- `app/db.py`: tạo async engine, session factory và dependency `SessionDep`.
 - `app/deps.py`: dependency dùng chung, hiện có `pagination`.
 - `app/error_handlers.py`: đăng ký global error envelope.
 - `app/exceptions.py`: domain exceptions như duplicate email, user not found.
 - `app/logging_setup.py`: cau hinh log JSON ra stdout.
 - `app/middleware.py`: do moi request mat bao lau va log mot dong.
 - `app/schemas/`: định nghĩa shape request/response bằng Pydantic.
+- `app/models/`: định nghĩa SQLAlchemy ORM models map với database tables.
 - `app/services/`: chứa business logic, không import FastAPI.
 - `app/routes/`: moi file la mot nhom endpoint rieng.
+- `scripts/create_tables.py`: tạo table tạm cho Day 8 trước khi học Alembic ở Day 9.
 - `tests/`: test endpoint bang `TestClient`.
 - `main.py`: shim de command cu `main:app` van import duoc.
 
@@ -104,6 +131,19 @@ uv sync
 Lenh `uv sync` doc `pyproject.toml` va `uv.lock`, sau do tao/cap nhat `.venv` dung version dependency cua project.
 
 ## Chay App
+
+Day 8 cần database. Ví dụ `.env` local:
+
+```text
+DATABASE_URL=postgresql+asyncpg://postgres:dev@localhost:5432/day08_api
+DATABASE_ECHO=true
+```
+
+Tạo table tạm trước khi học Alembic ở Day 9:
+
+```bash
+uv run python scripts/create_tables.py
+```
 
 Chay theo dung layout moi:
 
@@ -123,7 +163,7 @@ Mo browser:
 http://127.0.0.1:8000/docs
 ```
 
-Swagger UI o `/docs` sẽ hiện endpoint theo tag: `health`, `echo`, `version`, `users`.
+Swagger UI o `/docs` sẽ hiện endpoint theo tag: `health`, `echo`, `version`, `users`, `posts`.
 
 ## Goi Thu API
 

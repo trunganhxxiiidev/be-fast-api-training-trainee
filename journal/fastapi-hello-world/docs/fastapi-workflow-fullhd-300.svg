@@ -1,0 +1,194 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="5760" height="3240" viewBox="0 0 5760 3240">
+  <defs>
+    <style>
+      .bg { fill: #f7f9fc; }
+      .title { font-family: Arial, sans-serif; font-size: 104px; font-weight: 900; fill: #172033; }
+      .subtitle { font-family: Arial, sans-serif; font-size: 46px; font-weight: 500; fill: #526071; }
+      .section { font-family: Arial, sans-serif; font-size: 56px; font-weight: 800; fill: #172033; }
+      .label { font-family: Arial, sans-serif; font-size: 42px; font-weight: 800; fill: #172033; }
+      .body { font-family: Arial, sans-serif; font-size: 34px; font-weight: 400; fill: #334155; }
+      .small { font-family: Arial, sans-serif; font-size: 28px; font-weight: 400; fill: #526071; }
+      .mono { font-family: "DejaVu Sans Mono", Consolas, monospace; font-size: 30px; font-weight: 700; fill: #263244; }
+      .box { stroke: #243247; stroke-width: 5; rx: 30; ry: 30; }
+      .thin { stroke: #60708a; stroke-width: 4; fill: none; }
+      .arrow { stroke: #243247; stroke-width: 8; fill: none; marker-end: url(#arrow); }
+      .softArrow { stroke: #60708a; stroke-width: 6; fill: none; marker-end: url(#arrowSoft); }
+      .dashed { stroke-dasharray: 24 18; }
+      .chip { rx: 18; ry: 18; }
+      .stepNum { font-family: Arial, sans-serif; font-size: 44px; font-weight: 900; fill: #ffffff; }
+      .stepText { font-family: Arial, sans-serif; font-size: 36px; font-weight: 700; fill: #172033; }
+    </style>
+
+    <marker id="arrow" markerWidth="24" markerHeight="24" refX="20" refY="12" orient="auto" markerUnits="strokeWidth">
+      <path d="M2,2 L22,12 L2,22 Z" fill="#243247"/>
+    </marker>
+    <marker id="arrowSoft" markerWidth="20" markerHeight="20" refX="17" refY="10" orient="auto" markerUnits="strokeWidth">
+      <path d="M2,2 L18,10 L2,18 Z" fill="#60708a"/>
+    </marker>
+    <linearGradient id="headerGrad" x1="0" x2="1" y1="0" y2="0">
+      <stop offset="0" stop-color="#e8f7ff"/>
+      <stop offset="1" stop-color="#f1f5ff"/>
+    </linearGradient>
+  </defs>
+
+  <rect class="bg" width="5760" height="3240"/>
+
+  <rect x="120" y="90" width="5520" height="260" rx="42" fill="url(#headerGrad)" stroke="#c6d7ea" stroke-width="4"/>
+  <text x="180" y="215" class="title">FastAPI App Workflow: main.py, routers, schemas, services</text>
+  <text x="184" y="292" class="subtitle">Current project flow plus the Day 8 ORM extension point. Canvas: 5760 x 3240 (Full HD at 300%).</text>
+
+  <text x="150" y="470" class="section">1. Component Diagram</text>
+
+  <!-- Component boxes -->
+  <rect class="box" x="150" y="560" width="670" height="360" fill="#ffffff"/>
+  <text x="205" y="640" class="label">Client</text>
+  <text x="205" y="710" class="body">Browser, curl, tests</text>
+  <text x="205" y="775" class="mono">GET /health</text>
+  <text x="205" y="830" class="mono">POST /echo</text>
+  <text x="205" y="885" class="mono">POST /users</text>
+
+  <rect class="box" x="1000" y="520" width="790" height="440" fill="#fff8e6"/>
+  <text x="1055" y="600" class="label">app/main.py</text>
+  <text x="1055" y="670" class="body">create_app()</text>
+  <text x="1055" y="730" class="body">setup_logging()</text>
+  <text x="1055" y="790" class="body">add_middleware()</text>
+  <text x="1055" y="850" class="body">register_exception_handlers()</text>
+  <text x="1055" y="910" class="body">include_router(...)</text>
+
+  <rect class="box" x="1980" y="500" width="760" height="480" fill="#f2fbf5"/>
+  <text x="2035" y="580" class="label">Cross-cutting layer</text>
+  <text x="2035" y="650" class="body">RequestLoggerMiddleware</text>
+  <text x="2035" y="710" class="body">measures duration_ms</text>
+  <text x="2035" y="770" class="body">logs method/path/status</text>
+  <text x="2035" y="850" class="body">Error handlers</text>
+  <text x="2035" y="910" class="body">normalize AppError, HTTP, 422</text>
+
+  <rect class="box" x="2940" y="500" width="840" height="480" fill="#eef6ff"/>
+  <text x="2995" y="580" class="label">Routers</text>
+  <text x="2995" y="650" class="mono">routes/health.py</text>
+  <text x="2995" y="705" class="mono">routes/echo.py</text>
+  <text x="2995" y="760" class="mono">routes/version.py</text>
+  <text x="2995" y="815" class="mono">routes/users.py</text>
+  <text x="2995" y="895" class="body">Endpoint functions live here.</text>
+
+  <rect class="box" x="4020" y="420" width="720" height="300" fill="#f6f1ff"/>
+  <text x="4075" y="500" class="label">Schemas</text>
+  <text x="4075" y="570" class="body">Pydantic request validation</text>
+  <text x="4075" y="630" class="body">Response serialization</text>
+  <text x="4075" y="685" class="mono">UserCreate -> UserOut</text>
+
+  <rect class="box" x="4020" y="800" width="720" height="300" fill="#fff0f3"/>
+  <text x="4075" y="880" class="label">Services</text>
+  <text x="4075" y="950" class="body">Business logic</text>
+  <text x="4075" y="1010" class="mono">echo_service.py</text>
+  <text x="4075" y="1065" class="mono">user_service.py</text>
+
+  <rect class="box dashed" x="4940" y="690" width="650" height="390" fill="#ffffff" stroke="#7b8da3"/>
+  <text x="4995" y="770" class="label">Day 8 target</text>
+  <text x="4995" y="840" class="body">SQLAlchemy ORM</text>
+  <text x="4995" y="900" class="body">AsyncSession</text>
+  <text x="4995" y="960" class="body">Models: User, Post</text>
+  <text x="4995" y="1020" class="body">PostgreSQL</text>
+
+  <!-- Arrows component layer -->
+  <path class="arrow" d="M820 740 C890 740 930 740 995 740"/>
+  <path class="arrow" d="M1790 740 C1860 740 1910 740 1975 740"/>
+  <path class="arrow" d="M2740 740 C2810 740 2865 740 2935 740"/>
+  <path class="softArrow" d="M3780 690 C3885 640 3925 590 4015 570"/>
+  <path class="softArrow" d="M3780 805 C3890 875 3930 940 4015 950"/>
+  <path class="softArrow dashed" d="M4740 955 C4820 945 4875 930 4935 905"/>
+
+  <!-- Legend -->
+  <rect x="150" y="1010" width="3630" height="140" rx="26" fill="#ffffff" stroke="#d4deea" stroke-width="4"/>
+  <circle cx="220" cy="1080" r="22" fill="#243247"/>
+  <text x="265" y="1094" class="small">solid arrow = current code path</text>
+  <line x1="850" y1="1080" x2="970" y2="1080" stroke="#60708a" stroke-width="8" stroke-dasharray="24 18"/>
+  <text x="1010" y="1094" class="small">dashed arrow = Day 8 ORM target path</text>
+  <rect x="1810" y="1043" width="42" height="42" rx="10" fill="#f6f1ff" stroke="#243247" stroke-width="3"/>
+  <text x="1875" y="1094" class="small">schemas validate input and shape output</text>
+  <rect x="2820" y="1043" width="42" height="42" rx="10" fill="#fff0f3" stroke="#243247" stroke-width="3"/>
+  <text x="2885" y="1094" class="small">services hold business rules</text>
+
+  <text x="150" y="1290" class="section">2. Request Path Through The Current App</text>
+
+  <!-- Request path swim lanes -->
+  <rect x="150" y="1370" width="5460" height="1410" rx="42" fill="#ffffff" stroke="#d4deea" stroke-width="4"/>
+
+  <rect x="210" y="1440" width="460" height="1160" rx="24" fill="#f8fafc" stroke="#cbd5e1" stroke-width="3"/>
+  <text x="270" y="1515" class="label">Client</text>
+
+  <rect x="850" y="1440" width="560" height="1160" rx="24" fill="#fff8e6" stroke="#ead38a" stroke-width="3"/>
+  <text x="910" y="1515" class="label">main.py</text>
+
+  <rect x="1590" y="1440" width="640" height="1160" rx="24" fill="#f2fbf5" stroke="#b9dec3" stroke-width="3"/>
+  <text x="1650" y="1515" class="label">Middleware</text>
+
+  <rect x="2410" y="1440" width="740" height="1160" rx="24" fill="#eef6ff" stroke="#bdd7f4" stroke-width="3"/>
+  <text x="2470" y="1515" class="label">Router</text>
+
+  <rect x="3330" y="1440" width="720" height="1160" rx="24" fill="#f6f1ff" stroke="#d7c7f4" stroke-width="3"/>
+  <text x="3390" y="1515" class="label">Schema</text>
+
+  <rect x="4230" y="1440" width="760" height="1160" rx="24" fill="#fff0f3" stroke="#f2bac7" stroke-width="3"/>
+  <text x="4290" y="1515" class="label">Service</text>
+
+  <rect x="5160" y="1440" width="390" height="1160" rx="24" fill="#f8fafc" stroke="#cbd5e1" stroke-width="3"/>
+  <text x="5215" y="1515" class="label">Response</text>
+
+  <!-- Step rows -->
+  <circle cx="280" cy="1650" r="42" fill="#2563eb"/>
+  <text x="267" y="1666" class="stepNum">1</text>
+  <text x="345" y="1664" class="stepText">HTTP request enters app</text>
+  <path class="arrow" d="M675 1650 L845 1650"/>
+  <text x="920" y="1664" class="body">create_app already built FastAPI app</text>
+
+  <circle cx="280" cy="1830" r="42" fill="#2563eb"/>
+  <text x="267" y="1846" class="stepNum">2</text>
+  <text x="345" y="1844" class="stepText">Request passes middleware</text>
+  <path class="arrow" d="M1415 1830 L1585 1830"/>
+  <text x="1650" y="1815" class="body">RequestLoggerMiddleware</text>
+  <text x="1650" y="1870" class="small">start timer, then await call_next(request)</text>
+
+  <circle cx="280" cy="2010" r="42" fill="#2563eb"/>
+  <text x="267" y="2026" class="stepNum">3</text>
+  <text x="345" y="2024" class="stepText">FastAPI matches route</text>
+  <path class="arrow" d="M2235 2010 L2405 2010"/>
+  <text x="2470" y="1980" class="mono">/health -> health.router</text>
+  <text x="2470" y="2035" class="mono">/echo -> echo.router</text>
+  <text x="2470" y="2090" class="mono">/users -> users.router</text>
+
+  <circle cx="280" cy="2220" r="42" fill="#2563eb"/>
+  <text x="267" y="2236" class="stepNum">4</text>
+  <text x="345" y="2234" class="stepText">Schemas validate and serialize</text>
+  <path class="softArrow" d="M3155 2220 L3325 2220"/>
+  <text x="3390" y="2190" class="mono">EchoRequest</text>
+  <text x="3390" y="2245" class="mono">UserCreate / UserUpdate</text>
+  <text x="3390" y="2300" class="mono">UserOut / EchoResponse</text>
+
+  <circle cx="280" cy="2430" r="42" fill="#2563eb"/>
+  <text x="267" y="2446" class="stepNum">5</text>
+  <text x="345" y="2444" class="stepText">Services run business logic</text>
+  <path class="softArrow" d="M4055 2430 L4225 2430"/>
+  <text x="4290" y="2400" class="mono">build_echo_response()</text>
+  <text x="4290" y="2455" class="mono">user_service.create_user()</text>
+  <text x="4290" y="2510" class="mono">user_service.list_users()</text>
+
+  <circle cx="280" cy="2640" r="42" fill="#2563eb"/>
+  <text x="267" y="2656" class="stepNum">6</text>
+  <text x="345" y="2654" class="stepText">Response leaves app</text>
+  <path class="arrow" d="M4995 2640 L5155 2640"/>
+  <text x="5215" y="2608" class="body">JSON response</text>
+  <text x="5215" y="2665" class="small">middleware logs status and duration</text>
+
+  <!-- Error flow -->
+  <path class="softArrow dashed" d="M4550 2290 C4520 2150 4070 2070 3820 2105 C3430 2160 3350 1940 3150 1885"/>
+  <rect x="3330" y="1580" width="1660" height="200" rx="28" fill="#fff7ed" stroke="#f2c28c" stroke-width="4"/>
+  <text x="3395" y="1655" class="label">Error path</text>
+  <text x="3395" y="1725" class="body">AppError / HTTPException / validation error -> error_handlers.py -> {"error": {...}}</text>
+
+  <text x="150" y="2940" class="section">3. Beginner Mental Model</text>
+  <rect x="150" y="3010" width="5460" height="145" rx="30" fill="#172033"/>
+  <text x="225" y="3100" font-family="Arial, sans-serif" font-size="42" font-weight="700" fill="#ffffff">
+    Request JSON -> Pydantic schema -> router function -> service function -> response schema -> JSON. Day 8 replaces in-memory service storage with SQLAlchemy ORM + PostgreSQL.
+  </text>
+</svg>
