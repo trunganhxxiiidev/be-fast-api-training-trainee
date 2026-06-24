@@ -1,6 +1,6 @@
 # Hello API
 
-Day 5 biến project FastAPI hello world thành một service nhỏ có cấu trúc gần với dự án thật. Day 6 tiếp tục refactor project này theo hướng backend core: tách `schemas/`, thêm `services/`, dùng `Depends()` cho pagination, thêm CRUD `/users`, và chuẩn hóa error response. Day 8 chuyển `/users` sang SQLAlchemy ORM async, thêm models quan hệ `User`/`Post`/`Comment`, và thêm CRUD `/posts`. Day 10 thêm register/login bằng JWT, password hashing và admin-only delete.
+Day 5 biến project FastAPI hello world thành một service nhỏ có cấu trúc gần với dự án thật. Day 6 tiếp tục refactor project này theo hướng backend core: tách `schemas/`, thêm `services/`, dùng `Depends()` cho pagination, thêm CRUD `/users`, và chuẩn hóa error response. Day 8 chuyển `/users` sang SQLAlchemy ORM async, thêm models quan hệ `User`/`Post`/`Comment`, và thêm CRUD `/posts`. Day 10 thêm register/login bằng JWT, password hashing và admin-only delete. Day 11 mở rộng test suite theo test pyramid: unit, integration, end-to-end, rollback fixture và coverage report.
 
 Service này có các endpoint chính:
 
@@ -47,6 +47,9 @@ Sau bai nay ban can nam duoc:
 - Cách hash password bằng bcrypt/passlib, không lưu plaintext password.
 - Cách issue/verify JWT bằng secret từ config.
 - Cách dùng dependency cho current user và role-based authorization.
+- Cách tổ chức test pyramid cho FastAPI + SQLAlchemy.
+- Cách dùng async pytest fixtures với transaction rollback.
+- Cách dùng coverage report để tìm vùng logic đáng test tiếp.
 
 ## Cau Truc Project
 
@@ -98,10 +101,14 @@ fastapi-hello-world/
 ├── tests/
 │   ├── __init__.py
 │   ├── conftest.py
+│   ├── test_auth_e2e.py
+│   ├── test_auth_service_unit.py
 │   ├── test_health.py
 │   ├── test_auth.py
 │   ├── test_echo.py
+│   ├── test_post_service_integration.py
 │   ├── test_posts.py
+│   ├── test_user_service_integration.py
 │   ├── test_users.py
 │   └── test_version.py
 ├── main.py
@@ -130,6 +137,9 @@ Y nghia nhanh:
 - `app/routes/`: moi file la mot nhom endpoint rieng.
 - `migrations/`: Alembic migrations quản lý schema database theo version.
 - `tests/`: test endpoint bang `TestClient`.
+- `tests/test_*_service_integration.py`: test service layer với async DB session fixture.
+- `tests/test_auth_service_unit.py`: unit test auth service bằng fake session.
+- `tests/test_auth_e2e.py`: E2E auth + post flow qua HTTP.
 - `main.py`: shim de command cu `main:app` van import duoc.
 
 ## Cai Dat
@@ -419,20 +429,25 @@ Chay test:
 uv run pytest -v
 ```
 
+Chay test kem coverage:
+
+```bash
+uv run pytest --cov=app --cov-report=term-missing
+```
+
 Chạy lint:
 
 ```bash
 uv run ruff check .
 ```
 
-Project hien co 6 test:
+Day 11 test suite hiện có unit, integration và E2E tests cho health, echo, version, auth, users, posts và service layer.
 
-- `/health` happy path.
-- `/health` reject sai method.
-- `/echo` happy path.
-- `/echo` body thieu `message` tra ve `422`.
-- `/version` doc version tu settings.
-- `/version` reject sai method.
+Test DB Postgres cho bài Day 11 có thể bật bằng:
+
+```bash
+docker compose up -d postgres-test
+```
 
 Chay lint:
 
