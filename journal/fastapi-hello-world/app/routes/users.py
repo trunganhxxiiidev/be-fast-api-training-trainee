@@ -4,7 +4,9 @@ from fastapi import APIRouter, Depends, status
 
 from app.db import SessionDep
 from app.deps import pagination
+from app.models import User
 from app.schemas import PostOut, UserCreate, UserOut, UserReplace, UserUpdate
+from app.security import get_current_user, require_admin
 from app.services import post_service, user_service
 
 router = APIRouter(prefix="/users", tags=["users"])
@@ -28,6 +30,13 @@ async def list_users(
     limit, offset = page
     users = await user_service.list_users(db, limit=limit, offset=offset)
     return [to_user_out(user) for user in users]
+
+
+@router.get("/me", response_model=UserOut)
+async def get_me(
+    current_user: Annotated[User, Depends(get_current_user)],
+) -> UserOut:
+    return to_user_out(current_user)
 
 
 @router.get("/{user_id}", response_model=UserOut)
@@ -60,5 +69,9 @@ async def update_user(user_id: int, payload: UserUpdate, db: SessionDep) -> User
 
 
 @router.delete("/{user_id}", status_code=status.HTTP_204_NO_CONTENT)
-async def delete_user(user_id: int, db: SessionDep) -> None:
+async def delete_user(
+    user_id: int,
+    db: SessionDep,
+    _admin: Annotated[User, Depends(require_admin)],
+) -> None:
     await user_service.delete_user(db, user_id)

@@ -44,9 +44,11 @@ def client() -> Generator[TestClient, None, None]:
             log_level="INFO",
             database_url="sqlite+aiosqlite://",
             database_echo=False,
+            jwt_secret="test-secret-key-with-at-least-32-bytes",
         )
     )
     app.dependency_overrides[get_session] = override_get_session
+    app.state.test_session_local = session_local
 
     with TestClient(app) as test_client:
         yield test_client

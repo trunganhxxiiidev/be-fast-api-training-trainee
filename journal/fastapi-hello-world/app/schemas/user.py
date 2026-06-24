@@ -33,6 +33,7 @@ class UserOut(BaseModel):
     id: int
     email: EmailStr
     name: str
+    role: str
     is_active: bool
     created_at: datetime
     updated_at: datetime | None = None

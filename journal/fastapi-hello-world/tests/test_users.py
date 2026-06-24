@@ -23,8 +23,10 @@ def test_create_then_get_user(client: TestClient) -> None:
     assert created["id"] == 1
     assert created["email"] == "ada@example.com"
     assert created["name"] == "Ada Lovelace"
+    assert created["role"] == "member"
     assert created["is_active"] is True
     assert "password" not in created
+    assert "password_hash" not in created
     assert datetime.fromisoformat(created["created_at"])
 
     get_response = client.get("/users/1")
@@ -89,18 +91,6 @@ def test_patch_user(client: TestClient) -> None:
     assert body["email"] == "ada@example.com"
     assert body["name"] == "Countess Ada"
     assert body["updated_at"] is not None
-
-
-def test_delete_user(client: TestClient) -> None:
-    client.post("/users", json=user_payload())
-
-    delete_response = client.delete("/users/1")
-    get_response = client.get("/users/1")
-
-    assert delete_response.status_code == 204
-    assert delete_response.content == b""
-    assert get_response.status_code == 404
-    assert get_response.json()["error"]["code"] == "USER_NOT_FOUND"
 
 
 def test_get_user_returns_not_found(client: TestClient) -> None:

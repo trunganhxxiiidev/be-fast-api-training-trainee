@@ -7,6 +7,7 @@ from sqlalchemy.orm import selectinload
 from app.exceptions import DuplicateEmailError, UserNotFoundError
 from app.models import User
 from app.schemas import UserCreate, UserReplace, UserUpdate
+from app.security import hash_password
 
 
 async def list_users(db: AsyncSession, limit: int, offset: int) -> list[User]:
@@ -31,15 +32,34 @@ async def get_user_with_posts(db: AsyncSession, user_id: int) -> User:
     return user
 
 
-async def create_user(db: AsyncSession, payload: UserCreate) -> User:
-    email = _normalize_email(payload.email)
-    await _ensure_email_available(db, email)
+async def create_user(
+    db: AsyncSession,
+    payload: UserCreate | None = None,
+    *,
+    email: str | None = None,
+    name: str | None = None,
+    password: str | None = None,
+    is_active: bool = True,
+    role: str = "member",
+) -> User:
+    if payload is not None:
+        email = str(payload.email)
+        name = payload.name
+        password = payload.password
+        is_active = payload.is_active
+
+    if email is None or name is None or password is None:
+        raise ValueError("email, name, and password are required")
+
+    normalized_email = _normalize_email(email)
+    await _ensure_email_available(db, normalized_email)
 
     user = User(
-        email=email,
-        name=payload.name,
-        password=payload.password,
-        is_active=payload.is_active,
+        email=normalized_email,
+        name=name,
+        password_hash=hash_password(password),
+        role=role,
+        is_active=is_active,
     )
     db.add(user)
     await db.flush()
@@ -57,7 +77,7 @@ async def replace_user(
 
     user.email = email
     user.name = payload.name
-    user.password = payload.password
+    user.password_hash = hash_password(payload.password)
     user.is_active = payload.is_active
     user.updated_at = datetime.now(UTC)
     await db.flush()
@@ -75,7 +95,7 @@ async def update_user(db: AsyncSession, user_id: int, payload: UserUpdate) -> Us
     if "name" in updates:
         user.name = updates["name"]
     if "password" in updates:
-        user.password = updates["password"]
+        user.password_hash = hash_password(updates["password"])
     if "is_active" in updates:
         user.is_active = updates["is_active"]
     if updates:

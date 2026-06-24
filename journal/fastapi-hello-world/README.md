@@ -1,6 +1,6 @@
 # Hello API
 
-Day 5 biến project FastAPI hello world thành một service nhỏ có cấu trúc gần với dự án thật. Day 6 tiếp tục refactor project này theo hướng backend core: tách `schemas/`, thêm `services/`, dùng `Depends()` cho pagination, thêm CRUD `/users`, và chuẩn hóa error response. Day 8 chuyển `/users` sang SQLAlchemy ORM async, thêm models quan hệ `User`/`Post`/`Comment`, và thêm CRUD `/posts`.
+Day 5 biến project FastAPI hello world thành một service nhỏ có cấu trúc gần với dự án thật. Day 6 tiếp tục refactor project này theo hướng backend core: tách `schemas/`, thêm `services/`, dùng `Depends()` cho pagination, thêm CRUD `/users`, và chuẩn hóa error response. Day 8 chuyển `/users` sang SQLAlchemy ORM async, thêm models quan hệ `User`/`Post`/`Comment`, và thêm CRUD `/posts`. Day 10 thêm register/login bằng JWT, password hashing và admin-only delete.
 
 Service này có các endpoint chính:
 
@@ -9,13 +9,16 @@ Service này có các endpoint chính:
 | `GET` | `/health` | Tra ve `{"status": "ok"}` |
 | `POST` | `/echo` | Nhan `{"message": str}` va tra ve message kem timestamp |
 | `GET` | `/version` | Tra ve version doc tu config |
+| `POST` | `/auth/register` | Đăng ký user, hash password |
+| `POST` | `/auth/login` | Đăng nhập OAuth2 form, trả JWT bearer token |
 | `POST` | `/users` | Tạo user trong database |
 | `GET` | `/users?limit=20&offset=0` | List user có pagination |
+| `GET` | `/users/me` | Lấy current user từ JWT |
 | `GET` | `/users/{user_id}` | Lấy một user |
 | `GET` | `/users/{user_id}/posts` | List posts của user bằng relationship |
 | `PUT` | `/users/{user_id}` | Replace user |
 | `PATCH` | `/users/{user_id}` | Update một phần user |
-| `DELETE` | `/users/{user_id}` | Xóa user, trả `204` |
+| `DELETE` | `/users/{user_id}` | Admin-only delete, trả `204` |
 | `POST` | `/posts` | Tạo post thuộc về user |
 | `GET` | `/posts?limit=20&offset=0` | List posts có pagination |
 | `GET` | `/posts/{post_id}` | Lấy một post |
@@ -41,6 +44,9 @@ Sau bai nay ban can nam duoc:
 - Cách dùng `AsyncSession` làm FastAPI dependency.
 - Cách khai báo relationship giữa `User`, `Post`, `Comment`.
 - Cách tránh N+1 query bằng `selectinload`.
+- Cách hash password bằng bcrypt/passlib, không lưu plaintext password.
+- Cách issue/verify JWT bằng secret từ config.
+- Cách dùng dependency cho current user và role-based authorization.
 
 ## Cau Truc Project
 
@@ -56,8 +62,10 @@ fastapi-hello-world/
 │   ├── exceptions.py
 │   ├── logging_setup.py
 │   ├── middleware.py
+│   ├── security.py
 │   ├── schemas/
 │   │   ├── __init__.py
+│   │   ├── auth.py
 │   │   ├── echo.py
 │   │   ├── error.py
 │   │   ├── health.py
@@ -72,11 +80,13 @@ fastapi-hello-world/
 │   │   └── comment.py
 │   ├── services/
 │   │   ├── __init__.py
+│   │   ├── auth_service.py
 │   │   ├── echo_service.py
 │   │   ├── post_service.py
 │   │   └── user_service.py
 │   └── routes/
 │       ├── __init__.py
+│       ├── auth.py
 │       ├── health.py
 │       ├── echo.py
 │       ├── posts.py
@@ -89,6 +99,7 @@ fastapi-hello-world/
 │   ├── __init__.py
 │   ├── conftest.py
 │   ├── test_health.py
+│   ├── test_auth.py
 │   ├── test_echo.py
 │   ├── test_posts.py
 │   ├── test_users.py
@@ -105,8 +116,9 @@ fastapi-hello-world/
 Y nghia nhanh:
 
 - `app/main.py`: tao app, gan middleware, include router.
-- `app/config.py`: noi doc `PORT`, `APP_VERSION`, `LOG_LEVEL`, `DATABASE_URL`, `DATABASE_ECHO`.
+- `app/config.py`: noi doc `PORT`, `APP_VERSION`, `LOG_LEVEL`, `DATABASE_URL`, `DATABASE_ECHO`, `JWT_SECRET`.
 - `app/db.py`: tạo async engine, session factory và dependency `SessionDep`.
+- `app/security.py`: password hashing, JWT issue/verify, current-user dependency, RBAC dependency.
 - `app/deps.py`: dependency dùng chung, hiện có `pagination`.
 - `app/error_handlers.py`: đăng ký global error envelope.
 - `app/exceptions.py`: domain exceptions như duplicate email, user not found.
@@ -138,6 +150,8 @@ Day 8 cần database. Ví dụ `.env` local:
 ```text
 DATABASE_URL=postgresql+asyncpg://postgres:dev@localhost:5432/day08_api
 DATABASE_ECHO=true
+JWT_SECRET=change-this-in-real-environments-32-bytes-minimum
+ACCESS_TOKEN_EXPIRE_MINUTES=60
 ```
 
 Tạo hoặc cập nhật schema bằng Alembic:
@@ -164,7 +178,7 @@ Mo browser:
 http://127.0.0.1:8000/docs
 ```
 
-Swagger UI o `/docs` sẽ hiện endpoint theo tag: `health`, `echo`, `version`, `users`, `posts`.
+Swagger UI o `/docs` sẽ hiện endpoint theo tag: `health`, `echo`, `version`, `auth`, `users`, `posts`.
 
 ## Goi Thu API
 

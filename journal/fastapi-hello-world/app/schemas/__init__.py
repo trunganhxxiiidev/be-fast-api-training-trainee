@@ -1,3 +1,4 @@
+from app.schemas.auth import RegisterRequest, TokenResponse
 from app.schemas.echo import EchoRequest, EchoResponse
 from app.schemas.error import ErrorDetail, ErrorEnvelope
 from app.schemas.health import HealthResponse
@@ -15,6 +16,8 @@ __all__ = [
     "PostOut",
     "PostReplace",
     "PostUpdate",
+    "RegisterRequest",
+    "TokenResponse",
     "UserCreate",
     "UserOut",
     "UserReplace",
