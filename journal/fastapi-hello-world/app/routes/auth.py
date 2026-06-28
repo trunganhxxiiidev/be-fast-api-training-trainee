@@ -1,5 +1,6 @@
 from typing import Annotated
 
+import structlog
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
 
@@ -8,6 +9,7 @@ from app.schemas import RegisterRequest, TokenResponse, UserOut
 from app.services import auth_service
 
 router = APIRouter(prefix="/auth", tags=["auth"])
+logger = structlog.get_logger("auth")
 
 
 @router.post(
@@ -31,10 +33,12 @@ async def login(
         password=form.password,
     )
     if user is None:
+        logger.warning("login_failed", email=form.username, reason="invalid_credentials")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect email or password",
             headers={"WWW-Authenticate": "Bearer"},
         )
 
+    logger.info("login_succeeded", user_id=user.id)
     return TokenResponse(access_token=auth_service.issue_access_token(user))

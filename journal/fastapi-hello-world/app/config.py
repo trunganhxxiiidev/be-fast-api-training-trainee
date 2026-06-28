@@ -6,6 +6,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 class Settings(BaseSettings):
     port: int = 8000
     app_version: str = "0.1.0"
+    environment: str = "dev"
     log_level: str = "INFO"
     database_url: str = "postgresql+asyncpg://postgres:dev@localhost:5432/day08_api"
     database_echo: bool = True
