@@ -82,6 +82,36 @@ def test_get_post_returns_cached_value_without_db(
     assert fake_redis.set_calls == []
 
 
+def test_get_post_ignores_old_cache_version(
+    client: TestClient,
+    fake_redis: FakeRedis,
+) -> None:
+    client.post("/users", json=user_payload())
+    create_response = client.post("/posts", json=post_payload(title="Current post"))
+    created = create_response.json()
+    old_cached_post = PostOut(
+        id=1,
+        user_id=1,
+        title="Old cached post",
+        summary="Old version",
+        body="This old cache entry should be ignored.",
+        published=True,
+        published_at=datetime.fromisoformat("2026-06-28T08:00:00+00:00"),
+        created_at=datetime.fromisoformat("2026-06-28T08:00:00+00:00"),
+        updated_at=None,
+    )
+    fake_redis.data["v0:post:1"] = old_cached_post.model_dump_json()
+
+    response = client.get("/posts/1")
+
+    assert response.status_code == 200
+    assert response.json() == created
+    assert response.json()["title"] == "Current post"
+    assert fake_redis.get_calls[-1] == post_cache_key(1)
+    assert "v0:post:1" in fake_redis.data
+    assert post_cache_key(1) in fake_redis.data
+
+
 def test_patch_post_invalidates_cache(
     client: TestClient,
     fake_redis: FakeRedis,
@@ -102,6 +132,29 @@ def test_patch_post_invalidates_cache(
 
     assert get_response.status_code == 200
     assert get_response.json()["title"] == "Updated title"
+    assert key in fake_redis.data
+
+
+def test_put_post_invalidates_cache(
+    client: TestClient,
+    fake_redis: FakeRedis,
+) -> None:
+    client.post("/users", json=user_payload())
+    client.post("/posts", json=post_payload())
+    client.get("/posts/1")
+    key = post_cache_key(1)
+    assert key in fake_redis.data
+
+    put_response = client.put("/posts/1", json=post_payload(title="Replaced title"))
+
+    assert put_response.status_code == 200
+    assert key not in fake_redis.data
+    assert fake_redis.delete_calls[-1] == key
+
+    get_response = client.get("/posts/1")
+
+    assert get_response.status_code == 200
+    assert get_response.json()["title"] == "Replaced title"
     assert key in fake_redis.data
 
 
