@@ -14,6 +14,12 @@ class UserNotFoundError(AppError):
     message = "User not found"
 
 
+class PostNotFoundError(AppError):
+    status_code = 404
+    code = "POST_NOT_FOUND"
+    message = "Post not found"
+
+
 class DuplicateEmailError(AppError):
     status_code = 409
     code = "DUPLICATE_EMAIL"

@@ -1,6 +1,6 @@
 # Hello API
 
-Day 5 biến project FastAPI hello world thành một service nhỏ có cấu trúc gần với dự án thật. Day 6 tiếp tục refactor project này theo hướng backend core: tách `schemas/`, thêm `services/`, dùng `Depends()` cho pagination, thêm CRUD `/users`, và chuẩn hóa error response.
+Day 5 biến project FastAPI hello world thành một service nhỏ có cấu trúc gần với dự án thật. Day 6 tiếp tục refactor project này theo hướng backend core: tách `schemas/`, thêm `services/`, dùng `Depends()` cho pagination, thêm CRUD `/users`, và chuẩn hóa error response. Day 8 chuyển `/users` sang SQLAlchemy ORM async, thêm models quan hệ `User`/`Post`/`Comment`, và thêm CRUD `/posts`. Day 10 thêm register/login bằng JWT, password hashing và admin-only delete. Day 11 mở rộng test suite theo test pyramid: unit, integration, end-to-end, rollback fixture và coverage report.
 
 Service này có các endpoint chính:
 
@@ -9,12 +9,22 @@ Service này có các endpoint chính:
 | `GET` | `/health` | Tra ve `{"status": "ok"}` |
 | `POST` | `/echo` | Nhan `{"message": str}` va tra ve message kem timestamp |
 | `GET` | `/version` | Tra ve version doc tu config |
-| `POST` | `/users` | Tạo user in-memory |
+| `POST` | `/auth/register` | Đăng ký user, hash password |
+| `POST` | `/auth/login` | Đăng nhập OAuth2 form, trả JWT bearer token |
+| `POST` | `/users` | Tạo user trong database |
 | `GET` | `/users?limit=20&offset=0` | List user có pagination |
+| `GET` | `/users/me` | Lấy current user từ JWT |
 | `GET` | `/users/{user_id}` | Lấy một user |
+| `GET` | `/users/{user_id}/posts` | List posts của user bằng relationship |
 | `PUT` | `/users/{user_id}` | Replace user |
 | `PATCH` | `/users/{user_id}` | Update một phần user |
-| `DELETE` | `/users/{user_id}` | Xóa user, trả `204` |
+| `DELETE` | `/users/{user_id}` | Admin-only delete, trả `204` |
+| `POST` | `/posts` | Tạo post thuộc về user |
+| `GET` | `/posts?limit=20&offset=0` | List posts có pagination |
+| `GET` | `/posts/{post_id}` | Lấy một post |
+| `PUT` | `/posts/{post_id}` | Replace post |
+| `PATCH` | `/posts/{post_id}` | Update một phần post |
+| `DELETE` | `/posts/{post_id}` | Xóa post, trả `204` |
 
 ## Muc Tieu Bai Hoc
 
@@ -30,6 +40,16 @@ Sau bai nay ban can nam duoc:
 - Cách dùng `Depends()` cho query params dùng lại được.
 - Cách giữ route mỏng và đưa business logic vào `services/`.
 - Cách dùng global exception handlers để error có shape thống nhất.
+- Cách dùng SQLAlchemy 2.0 typed ORM với `Mapped[...]` và `mapped_column(...)`.
+- Cách dùng `AsyncSession` làm FastAPI dependency.
+- Cách khai báo relationship giữa `User`, `Post`, `Comment`.
+- Cách tránh N+1 query bằng `selectinload`.
+- Cách hash password bằng bcrypt/passlib, không lưu plaintext password.
+- Cách issue/verify JWT bằng secret từ config.
+- Cách dùng dependency cho current user và role-based authorization.
+- Cách tổ chức test pyramid cho FastAPI + SQLAlchemy.
+- Cách dùng async pytest fixtures với transaction rollback.
+- Cách dùng coverage report để tìm vùng logic đáng test tiếp.
 
 ## Cau Truc Project
 
@@ -39,33 +59,56 @@ fastapi-hello-world/
 │   ├── __init__.py
 │   ├── main.py
 │   ├── config.py
+│   ├── db.py
 │   ├── deps.py
 │   ├── error_handlers.py
 │   ├── exceptions.py
 │   ├── logging_setup.py
 │   ├── middleware.py
+│   ├── security.py
 │   ├── schemas/
 │   │   ├── __init__.py
+│   │   ├── auth.py
 │   │   ├── echo.py
 │   │   ├── error.py
 │   │   ├── health.py
+│   │   ├── post.py
 │   │   ├── user.py
 │   │   └── version.py
+│   ├── models/
+│   │   ├── __init__.py
+│   │   ├── base.py
+│   │   ├── user.py
+│   │   ├── post.py
+│   │   └── comment.py
 │   ├── services/
 │   │   ├── __init__.py
+│   │   ├── auth_service.py
 │   │   ├── echo_service.py
+│   │   ├── post_service.py
 │   │   └── user_service.py
 │   └── routes/
 │       ├── __init__.py
+│       ├── auth.py
 │       ├── health.py
 │       ├── echo.py
+│       ├── posts.py
 │       ├── users.py
 │       └── version.py
+├── migrations/
+│   ├── env.py
+│   └── versions/
 ├── tests/
 │   ├── __init__.py
 │   ├── conftest.py
+│   ├── test_auth_e2e.py
+│   ├── test_auth_service_unit.py
 │   ├── test_health.py
+│   ├── test_auth.py
 │   ├── test_echo.py
+│   ├── test_post_service_integration.py
+│   ├── test_posts.py
+│   ├── test_user_service_integration.py
 │   ├── test_users.py
 │   └── test_version.py
 ├── main.py
@@ -80,16 +123,23 @@ fastapi-hello-world/
 Y nghia nhanh:
 
 - `app/main.py`: tao app, gan middleware, include router.
-- `app/config.py`: noi doc `PORT`, `APP_VERSION`, `LOG_LEVEL`.
+- `app/config.py`: noi doc `PORT`, `APP_VERSION`, `LOG_LEVEL`, `DATABASE_URL`, `DATABASE_ECHO`, `JWT_SECRET`.
+- `app/db.py`: tạo async engine, session factory và dependency `SessionDep`.
+- `app/security.py`: password hashing, JWT issue/verify, current-user dependency, RBAC dependency.
 - `app/deps.py`: dependency dùng chung, hiện có `pagination`.
 - `app/error_handlers.py`: đăng ký global error envelope.
 - `app/exceptions.py`: domain exceptions như duplicate email, user not found.
 - `app/logging_setup.py`: cau hinh log JSON ra stdout.
 - `app/middleware.py`: do moi request mat bao lau va log mot dong.
 - `app/schemas/`: định nghĩa shape request/response bằng Pydantic.
+- `app/models/`: định nghĩa SQLAlchemy ORM models map với database tables.
 - `app/services/`: chứa business logic, không import FastAPI.
 - `app/routes/`: moi file la mot nhom endpoint rieng.
+- `migrations/`: Alembic migrations quản lý schema database theo version.
 - `tests/`: test endpoint bang `TestClient`.
+- `tests/test_*_service_integration.py`: test service layer với async DB session fixture.
+- `tests/test_auth_service_unit.py`: unit test auth service bằng fake session.
+- `tests/test_auth_e2e.py`: E2E auth + post flow qua HTTP.
 - `main.py`: shim de command cu `main:app` van import duoc.
 
 ## Cai Dat
@@ -104,6 +154,21 @@ uv sync
 Lenh `uv sync` doc `pyproject.toml` va `uv.lock`, sau do tao/cap nhat `.venv` dung version dependency cua project.
 
 ## Chay App
+
+Day 8 cần database. Ví dụ `.env` local:
+
+```text
+DATABASE_URL=postgresql+asyncpg://postgres:dev@localhost:5432/day08_api
+DATABASE_ECHO=true
+JWT_SECRET=change-this-in-real-environments-32-bytes-minimum
+ACCESS_TOKEN_EXPIRE_MINUTES=60
+```
+
+Tạo hoặc cập nhật schema bằng Alembic:
+
+```bash
+uv run alembic upgrade head
+```
 
 Chay theo dung layout moi:
 
@@ -123,7 +188,7 @@ Mo browser:
 http://127.0.0.1:8000/docs
 ```
 
-Swagger UI o `/docs` sẽ hiện endpoint theo tag: `health`, `echo`, `version`, `users`.
+Swagger UI o `/docs` sẽ hiện endpoint theo tag: `health`, `echo`, `version`, `auth`, `users`, `posts`.
 
 ## Goi Thu API
 
@@ -364,20 +429,25 @@ Chay test:
 uv run pytest -v
 ```
 
+Chay test kem coverage:
+
+```bash
+uv run pytest --cov=app --cov-report=term-missing
+```
+
 Chạy lint:
 
 ```bash
 uv run ruff check .
 ```
 
-Project hien co 6 test:
+Day 11 test suite hiện có unit, integration và E2E tests cho health, echo, version, auth, users, posts và service layer.
 
-- `/health` happy path.
-- `/health` reject sai method.
-- `/echo` happy path.
-- `/echo` body thieu `message` tra ve `422`.
-- `/version` doc version tu settings.
-- `/version` reject sai method.
+Test DB Postgres cho bài Day 11 có thể bật bằng:
+
+```bash
+docker compose up -d postgres-test
+```
 
 Chay lint:
 
