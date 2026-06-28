@@ -10,6 +10,7 @@ class Settings(BaseSettings):
     log_level: str = "INFO"
     database_url: str = "postgresql+asyncpg://postgres:dev@localhost:5432/day08_api"
     database_echo: bool = True
+    redis_url: str = "redis://localhost:6379/0"
     jwt_secret: str = "dev-only-change-me-32-bytes-minimum"
     access_token_expire_minutes: int = 60
 
