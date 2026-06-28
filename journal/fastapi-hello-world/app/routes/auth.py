@@ -1,3 +1,4 @@
+import hashlib
 from typing import Annotated
 
 import structlog
@@ -10,6 +11,15 @@ from app.services import auth_service
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 logger = structlog.get_logger("auth")
+
+
+def login_identifier_fields(identifier: str) -> dict[str, str]:
+    normalized = identifier.strip().lower()
+    email_domain = normalized.rsplit("@", maxsplit=1)[-1] if "@" in normalized else "unknown"
+    return {
+        "email_hash": hashlib.sha256(normalized.encode("utf-8")).hexdigest(),
+        "email_domain": email_domain,
+    }
 
 
 @router.post(
@@ -33,7 +43,11 @@ async def login(
         password=form.password,
     )
     if user is None:
-        logger.warning("login_failed", email=form.username, reason="invalid_credentials")
+        logger.warning(
+            "login_failed",
+            **login_identifier_fields(form.username),
+            reason="invalid_credentials",
+        )
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect email or password",

@@ -88,6 +88,20 @@ def test_login_wrong_password_uses_generic_error(client: TestClient) -> None:
     }
 
 
+def test_login_failure_log_masks_email(client: TestClient, capsys) -> None:
+    client.post("/auth/register", json=register_payload())
+    capsys.readouterr()
+
+    response = client.post("/auth/login", data=login_form(password="wrong-password"))
+
+    assert response.status_code == 401
+    captured = capsys.readouterr().out
+    assert "login_failed" in captured
+    assert "email_hash" in captured
+    assert "email_domain" in captured
+    assert "ada@example.com" not in captured
+
+
 def test_get_me_without_token_returns_401(client: TestClient) -> None:
     response = client.get("/users/me")
 
