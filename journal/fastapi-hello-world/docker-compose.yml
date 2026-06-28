@@ -14,7 +14,7 @@ services:
       db:
         condition: service_healthy
       cache:
-        condition: service_started
+        condition: service_healthy
     volumes:
       - ./app:/app/app
       - ./migrations:/app/migrations
@@ -37,7 +37,7 @@ services:
       db:
         condition: service_healthy
       cache:
-        condition: service_started
+        condition: service_healthy
     profiles:
       - test
 
@@ -61,6 +61,11 @@ services:
     image: redis:7-alpine
     ports:
       - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "PING"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
 
   postgres-test:
     image: postgres:16-alpine
