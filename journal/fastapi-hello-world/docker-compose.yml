@@ -1,4 +1,72 @@
 services:
+  api:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      ENVIRONMENT: dev
+      LOG_LEVEL: INFO
+      DATABASE_URL: postgresql+asyncpg://postgres:dev@db:5432/app
+      DATABASE_ECHO: "false"
+      JWT_SECRET: dev-only-change-me-32-bytes-minimum
+      REDIS_URL: redis://cache:6379/0
+    depends_on:
+      db:
+        condition: service_healthy
+      cache:
+        condition: service_healthy
+    volumes:
+      - ./app:/app/app
+      - ./migrations:/app/migrations
+    command: >
+      sh -c "alembic upgrade head &&
+      uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload"
+
+  api-test:
+    build:
+      context: .
+      target: test
+    environment:
+      ENVIRONMENT: dev
+      LOG_LEVEL: INFO
+      DATABASE_URL: postgresql+asyncpg://postgres:dev@db:5432/app
+      DATABASE_ECHO: "false"
+      JWT_SECRET: dev-only-change-me-32-bytes-minimum
+      REDIS_URL: redis://cache:6379/0
+    depends_on:
+      db:
+        condition: service_healthy
+      cache:
+        condition: service_healthy
+    profiles:
+      - test
+
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: app
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: dev
+    ports:
+      - "5432:5432"
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d app"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  cache:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "PING"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
   postgres-test:
     image: postgres:16-alpine
     environment:
@@ -12,3 +80,6 @@ services:
       interval: 5s
       timeout: 3s
       retries: 10
+
+volumes:
+  pg_data:
